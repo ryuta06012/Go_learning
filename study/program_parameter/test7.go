@@ -6,7 +6,7 @@
 /*   By: hryuuta <hryuuta@student.42tokyo.jp>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/21 12:30:24 by hryuuta           #+#    #+#             */
-/*   Updated: 2021/12/21 16:44:57 by hryuuta          ###   ########.fr       */
+/*   Updated: 2021/12/22 14:03:18 by hryuuta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,9 +19,14 @@ import (
 	"image/gif"
 	"image/jpeg"
 	"image/png"
+	"log"
 	"os"
 	"path/filepath"
 )
+
+var from = flag.String("f", ".jpg", "Extension before conversion")
+var to = flag.String("t", ".png", "Extension after conversion")
+var rm = flag.Bool("r", false, "Remove file before conversion")
 
 func removeSrc(src string) error {
 	err := os.Remove(src)
@@ -38,14 +43,12 @@ func Convert(src, dst string, rmsrc bool) error {
 		return err
 	}
 	defer sf.Close()
-	println("a")
 
 	// image.Imageへとデコード
 	img, _, err := image.Decode(sf)
 	if err != nil {
 		return err
 	}
-	println("b")
 
 	// 読み書き用ファイルを作成
 	df, err := os.Create(dst)
@@ -53,7 +56,7 @@ func Convert(src, dst string, rmsrc bool) error {
 		return err
 	}
 	defer df.Close()
-	println("b")
+
 	// .以降を取り出して条件分岐 その後image.Imageからエンコード
 	switch filepath.Ext(dst) {
 	case ".png":
@@ -64,7 +67,6 @@ func Convert(src, dst string, rmsrc bool) error {
 	case ".gif":
 		err = gif.Encode(df, img, nil)
 	}
-	println("d")
 	if err != nil {
 		return err
 	}
@@ -88,16 +90,8 @@ func check_dir(test_dir string) error {
 	return err
 }
 
-func main() {
-	from := flag.String("f", ".jpg", "Extension before conversion")
-	to := flag.String("t", ".png", "Extension after conversion")
-	rm := flag.Bool("r", false, "Remove file before conversion")
-	flag.Parse()
-	if err := check_dir(os.Args[1]); err != nil {
-		os.Exit(1)
-	}
-	println(*to)
-	err := filepath.Walk(os.Args[1],
+func find_dir(dir string) error {
+	err := filepath.Walk(dir,
 		func(path string, info os.FileInfo, err error) error {
 			if filepath.Ext(path) == *from {
 				fmt.Println(path)
@@ -106,13 +100,29 @@ func main() {
 				err := Convert(path, dst, *rm)
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+					return err
 				}
 			}
 			return nil
 		})
 	println(err)
 	if err != nil {
-		println("aaafsadsaf\n")
+		fmt.Println("Error on filepath.Walk : ", err)
 	}
+	return err
+}
 
+func main() {
+
+	flag.Parse()
+	if len(os.Args) < 2 {
+		fmt.Fprintf(os.Stderr, "%s\n", "Not enough arguments")
+		os.Exit(1)
+	}
+	if err := check_dir(os.Args[1]); err != nil {
+		os.Exit(1)
+	}
+	if err := find_dir(os.Args[1]); err != nil {
+		log.Fatal(err)
+	}
 }
