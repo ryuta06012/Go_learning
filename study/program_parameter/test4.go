@@ -6,7 +6,7 @@
 /*   By: hryuuta <hryuuta@student.42tokyo.jp>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/21 10:18:11 by hryuuta           #+#    #+#             */
-/*   Updated: 2021/12/21 11:05:42 by hryuuta          ###   ########.fr       */
+/*   Updated: 2021/12/22 14:20:09 by hryuuta          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ func check_dir(test_dir string) error {
 func main() {
 	test_dir := os.Args
 	fmt.Printf("%s\n", test_dir[1])
-	if err := check_dir(test_dir[1]) {
+	if err := check_dir(test_dir[1]); err != nil {
 		println(err)
 	}
 }
